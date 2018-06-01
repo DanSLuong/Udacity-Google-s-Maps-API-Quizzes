@@ -30,36 +30,68 @@ API Course, Lesson 1-18 -->
     <!-- TODO 1: Create a place to put the map in the HTML-->
     <div id="map"></div>
     <script>
-        // TODO: Create a map variable
+        // Map variable
         var map;
-        // TODO: Complete the following function to initialize the map
+        // Blank Marker Array to store all the listings as markers
+        var markers = [];
+
+        // Function to initialize the map
         function initMap() {
-            // TODO: use a constructor to create a new map JS object. You can use the coordinates
-            // we used, 40.7413549, -73.99802439999996 or your own!
+            // Constructor to create a new map JS object - only center and zoom are required
             map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 29.7604, lng: -95.3698 },
                 zoom: 13
             });
-            // Create a single latLng literal object.
-            var singleLatLng = { lat: 29.7604, lng: -95.3698 };
-            // TODO: Create a single marker appearing on initialize -
-            // Create it with the position of the singleLatLng,
-            // on the map, and give it your own title!
-            var marker = new google.maps.Marker({
-                position: singleLatLng,
-                map: map,
-                title: 'First Info Window'
-            });
-            // TODO: create a single infowindow, with your own content.
-            // It must appear on the marker
-            var infowindow = new google.maps.InfoWindow({
-                content: 'New infowindow added here!!!'
-            });
-            // TODO: create an EVENT LISTENER so that the infowindow opens when
-            // the marker is clicked!
-            marker.addListener('click', function () {
-                infowindow.open(map, marker);
-            });
+            // Create real estate listings. Normally this would be put into a database
+            var locations = [
+                { title: 'Memorial Club Apartments', location: { lat: 29.770328, lng: -95.423998 } },
+                { title: 'Elan Memorial Park Luxury Apartments', location: { lat: 29.770704, lng: -95.422771 } },
+                { title: 'Nice Midtown Condo', location: { lat: 29.769756, lng: -95.421690 } },
+                { title: 'Large Two Story House', location: { lat: 29.770530, lng: -95.420616 } },
+                { title: 'Fancy Three Story Condo', location: { lat: 29.771865, lng: -95.421548 } },
+                { title: 'Simple Apartment Complex', location: { lat: 29.772972, lng: -95.420053 } }
+            ];
+
+            var largeInfowindow = new google.maps.InfoWindow();
+            // Captures the SW and NE corners of the view port
+            var bounds = new google.maps.LatLngBounds();
+
+            // Array that uses the location array to create an array of markers on initialize.
+            for (var i = 0; i < locations.length; i++) {
+                var position = locations[i].location;
+                var title = locations[i].title;
+                // Create a marker per location and store it into markers array.
+                var marker = new google.maps.Marker({
+                    position: position,
+                    map: map,
+                    title: title,
+                    animation: google.maps.Animation.DROP,
+                    id: i
+                });
+                // Push the marker onto the array of markers.
+                markers.push(marker);
+                // Extends the bounderies to fit each marker in
+                bounds.extend(marker.position);
+                // Creates an EVENT LISTENER to open infowindow when the marker is clicked!
+                marker.addListener('click', function () {
+                    populateInfoWindow(this, largeInfowindow);
+                });
+            }
+            map.fitBounds(bounds);
+
+            // Populate the infowindow when the marker is clicked based on markers' position
+            function populateInfoWindow(marker, infowindow) {
+                // Check to make sure the infowindow isn't already oepn for this marker.
+                if (infowindow.marker != marker) {
+                    infowindow.marker = marker;
+                    infowindow.setContent('<div>' + marker.title + '</br>' + marker.position + '</div>');
+                    infowindow.open(map, marker);
+                    // Make sure the marker property is cleared if the infowindow is closed.
+                    infowindow.addListener('closeclick', function() {
+                        infowindow.setMarker(null);
+                    });
+                }
+            }
         }
     </script>
     <!--TODO: Load the JS API ASYNCHRONOUSLY below.-->
