@@ -53,6 +53,9 @@ API Course, Lesson 1-18 -->
             <div>
                 <input id="show-listings" type="button" value="Show Listings">
                 <input id="hide-listings" type="button" value="Hide Listings">
+                <hr>
+                <span class="text"> Draw a shape to search within it for homes! </span>
+                <input id="toggle-drawing" type="button" value="Drawing Tools">
             </div>
         </div>
     </div>
@@ -63,6 +66,8 @@ API Course, Lesson 1-18 -->
         var map;
         // Blank Marker Array to store all the listings as markers
         var markers = [];
+        // Golobal polygon variable to insure there is only one rendered polygon.
+        var polygon = null;
 
         // Function to initialize the map
         function initMap() {
@@ -153,6 +158,18 @@ API Course, Lesson 1-18 -->
 
             var largeInfowindow = new google.maps.InfoWindow();
 
+            // Initialize the drawing manager.
+            var drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: google.maps.drawing.OverlayType.POLYGON,
+                drawingControl: true,
+                drawingControlOptions: {
+                    position: google.maps.ControlPosition.TOP_LEFT,
+                    drawingModes: [
+                        google.maps.drawing.OverlayType.POLYGON
+                    ]
+                }
+            });
+
             // Style the markers a bit. this will be our listing marker icon.
             var defaultIcon = makeMarkerIcon('0091ff');
 
@@ -189,6 +206,30 @@ API Course, Lesson 1-18 -->
 
             document.getElementById('show-listings').addEventListener('click', showListings);
             document.getElementById('hide-listings').addEventListener('click', hideListings);
+
+            document.getElementById('toggle-drawing').addEventListener('click', function () {
+                toggleDrawing(drawingManager);
+            });
+
+
+            // Show markers inside of polygon and hide the ones outside of it
+            drawingManager.addListener('overlaycomplete', function (event) {
+                // Chesk for existing polygon and gets rid of it and the markers
+                if (polygon) {
+                    polygon.setMap(null);
+                    hideListings(markers);
+                }
+                // Switching the drawing mode to the hand mode
+                drawingManager.setDrawingMode(null);
+                // Create a new editable polygon from the overlay.
+                polygon = event.overlay;
+                polygon.setEditable(true);
+                // Search within the polygon.
+                searchWithinPolygon(polygon);
+                // make sure the search is done again if the polygon is changed.
+                polygon.getPath().addListener('set_at', searchWithinPolygon);
+                polygon.getPath().addListener('insert_at', searchWithinPolygon);
+            });
         }
 
         // Populate the infowindow when the marker is clicked based on markers' position
@@ -264,9 +305,34 @@ API Course, Lesson 1-18 -->
                 new google.maps.Size(21, 34));
             return markerImage;
         }
+
+        // This shows and hides the drawing options.
+        function toggleDrawing(drawingManager) {
+            if (drawingManager.map) {
+                drawingManager.setMap(null);
+                // Get rid of any polygons when toggled off
+                if (polygon) {
+                    polygon.setMap(null);
+                }
+            } else {
+                drawingManager.setMap(map);
+            }
+        }
+
+        // Hides all the markers outside of the user specified polygon and shows the ones within
+        function searchWithinPolygon() {
+            for (var i = 0; i < markers.length; i++) {
+                if (google.maps.geometry.poly.containsLocation(markers[i].position, polygon)) {
+                    markers[i].setMap(map);
+                } else {
+                    markers[i].setMap(null);
+                }
+            }
+        }
+
     </script>
     <!-- Load the JS API ASYNCHRONOUSLY -->
-    <script src="https://maps.googleapis.com/maps/api/js?libraries=geometry&key=AIzaSyCq1GE9uIunJEUzqnfxH8id_xknI7okebk&callback=initMap"
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing,geometry&key=AIzaSyCq1GE9uIunJEUzqnfxH8id_xknI7okebk&callback=initMap"
         async defer></script>
 </body>
 
