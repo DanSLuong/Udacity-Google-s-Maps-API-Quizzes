@@ -229,6 +229,10 @@ API Course, Lesson 1-18 -->
                 // make sure the search is done again if the polygon is changed.
                 polygon.getPath().addListener('set_at', searchWithinPolygon);
                 polygon.getPath().addListener('insert_at', searchWithinPolygon);
+
+                // Calculate the area of the drawn polygon.
+                var area = google.maps.geometry.spherical.computeArea(polygon.getPath());
+                window.alert(area + " SQUARE METERS");
             });
         }
 
