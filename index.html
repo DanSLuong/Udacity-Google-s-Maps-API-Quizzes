@@ -406,6 +406,36 @@ API Course, Lesson 1-18 -->
             }
         }
 
+        // Display the route on the map
+        function displayDirections(origin) {
+            hideListings();
+            var directionsService = new google.maps.DirectionsService;
+            // Get the destination address from the user entered value.
+            var destinationAddress = document.getElementById('search-within-time-text').value;
+            // Get the mode from the user entered value
+            var mode = document.getElementById('mode').value;
+            directionsService.route({
+                // The origin is the passed in the marker's position
+                origin: origin,
+                // The destination is the user specified address
+                destination: destinationAddress,
+                travelMode: google.maps.TravelMode[mode]
+            }, function(response, status) {
+                if (status === google.maps.DirectionsStatus.OK) {
+                    var directionsDisplay = new google.maps.DirectionsRenderer({
+                        map: map,
+                        directions: response,
+                        draggable: true,
+                        polylineOptions: {
+                            strokeColor: 'green'
+                        }
+                    });
+                } else {
+                    window.alert('DIrections request failed due to ' + status);
+                }
+            });
+        }
+
         // Calculate distances and duration of travel between the markers and the location the user provides
         function searchWithinTime() {
             var distanceMatrixService = new google.maps.DistanceMatrixService;
@@ -452,7 +482,7 @@ API Course, Lesson 1-18 -->
                     if (element.status === "OK") {
                         var distanceText = element.distance.text;
                         // Duration value is in seconds. We need both the value and the text
-                        var duration = element.duration.value/60;
+                        var duration = element.duration.value / 60;
                         var durationText = element.duration.text;
                         if (duration <= maxDuration) {
                             // Origin[i] = markers[i]
@@ -460,12 +490,14 @@ API Course, Lesson 1-18 -->
                             atLeastOne = true;
                             // Create a mini infowindow to open and contain the distance and duration
                             var infowindow = new google.maps.InfoWindow({
-                                content: durationText + ' away, ' + distanceText
+                                content: durationText + ' away, ' + distanceText +
+                                    '<div><input type="button\" value=\"View Route\" onclick =' +
+                                    '\"displayDirections(&quot;' + origins[i] + '&quot;);\"></input></div>'
                             });
                             infowindow.open(map, markers[i]);
                             // The small window closes if the marker is clicked
                             markers[i].infowindow = infowindow;
-                            google.maps.event.addListener(markers[i], 'click', function() {
+                            google.maps.event.addListener(markers[i], 'click', function () {
                                 this.infowindow.close();
                             });
                         }
